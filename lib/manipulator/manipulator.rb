@@ -16,7 +16,6 @@ class Manipulator
   
   # Path to the local temp file used during manipulation
   attr_accessor :temp_file_path
-  attr_accessor :bucket
 
   # Downloads the specified bucket, key from S3 to a local temp file
   # and sets temp_file_path
