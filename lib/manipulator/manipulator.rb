@@ -12,7 +12,7 @@ class Manipulator
   attr_accessor :temp_file_path
   attr_accessor :bucket
 
-  def download bucket, key
+  def download(bucket, key)
     AWS::S3::Base.establish_connection!(:access_key_id => AWSCredentials.access_key, :secret_access_key => AWSCredentials.secret_access_key)
     @temp_file_path = File.join(Dir.tmpdir, key.gsub('/', '-'))
     File.open(temp_file_path, 'w+') do |f|
@@ -20,7 +20,7 @@ class Manipulator
     end
   end
 
-  def upload bucket, key
+  def upload(bucket, key)
     AWS::S3::S3Object.store(key, File.open(temp_file_path, 'r'), bucket, :access => :public_read)
   end
 
@@ -37,7 +37,7 @@ class Manipulator
   end
 
   def cleanup
-    File.delete temp_file_path
+    File.delete(temp_file_path)
   end
   
 end
