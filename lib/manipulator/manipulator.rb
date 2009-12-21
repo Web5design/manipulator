@@ -1,3 +1,5 @@
+# Tries to avoid case-sensitivity issues when requiring RMagick.
+# Borrowed from jnicklas' carrierwave.
 unless defined? Magick
   begin
     require 'rmagick'
