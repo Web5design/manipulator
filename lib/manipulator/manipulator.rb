@@ -15,7 +15,7 @@ class Manipulator
   def download bucket, key
     AWS::S3::Base.establish_connection!(:access_key_id => AWSCredentials.access_key, :secret_access_key => AWSCredentials.secret_access_key)
     @temp_file_path = File.join(Dir.tmpdir, key.gsub('/', '-'))
-    File.open(@temp_file_path, 'w+') do |f|
+    File.open(temp_file_path, 'w+') do |f|
       f.puts AWS::S3::S3Object.value(key,bucket)
     end
   end
@@ -27,9 +27,9 @@ class Manipulator
   def manipulate(bucket, key, &block)
     download(bucket, key)
     begin
-      @image = ::Magick::Image.read(temp_file_path).first
-      new_image = yield(@image)
-      new_image.write temp_file_path
+      image = ::Magick::Image.read(temp_file_path).first
+      new_image = yield(image)
+      new_image.write(temp_file_path)
       upload(bucket, key)
     ensure
       cleanup
@@ -41,4 +41,3 @@ class Manipulator
   end
   
 end
-
