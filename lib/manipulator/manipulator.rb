@@ -21,7 +21,7 @@ class Manipulator
   end
 
   def upload bucket, key
-    AWS::S3::S3Object.store(key, File.open(temp_file_path, 'r').read, bucket, :access => :public_read)
+    AWS::S3::S3Object.store(key, File.open(temp_file_path, 'r'), bucket, :access => :public_read)
   end
 
   def manipulate(bucket, key, &block)

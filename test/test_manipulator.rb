@@ -93,7 +93,7 @@ class TestManipulator < Test::Unit::TestCase
       @manipulator.stubs(:temp_file_path).returns(@temp_file_path)
     end
     should "call S3Object.store with contents of tempfile" do
-      AWS::S3::S3Object.expects(:store).with(@key,@new_file.read,@bucket, :access => :public_read)
+      AWS::S3::S3Object.expects(:store).with(@key,@new_file,@bucket, :access => :public_read)
       @manipulator.upload(@bucket, @key)
     end
   end
