@@ -1,6 +1,6 @@
 = manipulator
 
-Description goes here.
+A library to allow photo manipulation on S3 images using RMagick.
 
 == Note on Patches/Pull Requests
  
@@ -11,6 +11,30 @@ Description goes here.
 * Commit, do not mess with rakefile, version, or history.
   (if you want to have your own version, that is fine but bump version in a commit by itself I can ignore when I pull)
 * Send me a pull request. Bonus points for topic branches.
+
+== Install
+
+Manipulator is released on gemcutter. If you haven't already set yourself up with that, here's how:
+
+ $ gem install gemcutter
+ $ gem tumble
+
+Then, to install Manipulator:
+
+ $ gem install manipulator
+
+You can also just declare the source:
+
+ $ gem install manipulator -s http://gemcutter.org
+
+== Dependencies
+
+* AWSCredentials (http://github.com/bkoski/aws_credentials)
+* AWS/S3 (http://gemcutter.org/gems/aws-s3)
+
+== Documentation
+
+TODO
 
 == Copyright
 
