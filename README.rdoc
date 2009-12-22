@@ -38,4 +38,4 @@ TODO
 
 == Copyright
 
-Copyright (c) 2009 Jacqui Maher. See LICENSE for details.
+Copyright (c) 2009 The New York Times Company. See LICENSE for details.
