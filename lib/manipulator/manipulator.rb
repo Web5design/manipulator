@@ -24,6 +24,7 @@ class Manipulator
   def download(bucket, key)
     AWS::S3::Base.establish_connection!(:access_key_id => AWSCredentials.access_key, :secret_access_key => AWSCredentials.secret_access_key)
     @temp_file_path = File.join(Dir.tmpdir, key.gsub('/', '-'))
+    puts "temp_file_path: #{temp_file_path}"
     File.open(temp_file_path, 'w+') do |f|
       f.puts AWS::S3::S3Object.value(key,bucket)
     end
@@ -46,13 +47,13 @@ class Manipulator
   #  img.rotate(90)
   #  img.sepia_tone
   # This last case will only <tt>sepia_tone</tt> the image.
-  def manipulate(bucket, key, &block)
-    download(bucket, key)
+  def manipulate(options, &block)
+    download(options[:bucket], options[:key])
     begin
       image = ::Magick::Image.read(temp_file_path).first
       new_image = yield(image)
       new_image.write(temp_file_path)
-      upload(bucket, key)
+      upload(options[:bucket], options[:key]) unless options[:keep_local]
     ensure
       cleanup
     end

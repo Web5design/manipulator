@@ -50,11 +50,11 @@ class TestManipulator < Test::Unit::TestCase
 
     should "download the file" do
       @manipulator.expects(:download).with(@bucket, @key).returns(@key)
-      @manipulator.manipulate(@bucket, @key) { |img| img }
+      @manipulator.manipulate({:bucket => @bucket, :key => @key}) { |img| img }
     end
     should "create an RMagick Image instance and yield it to the block" do
       Magick::Image.expects(:read).with(@temp_file_path).returns([@mocked])
-      @manipulator.manipulate(@bucket, @key) do |img|
+      @manipulator.manipulate({:bucket => @bucket, :key => @key}) do |img|
         assert_equal @mocked, img
         img
       end
@@ -62,24 +62,28 @@ class TestManipulator < Test::Unit::TestCase
     should "write the returned manipulated image to the temp file" do
       @mocked.expects(:write).with(@temp_file_path)
       Magick::Image.stubs(:read).with(@temp_file_path).returns([@mocked])
-      @manipulator.manipulate(@bucket, @key) { |img| img }
+      @manipulator.manipulate({:bucket => @bucket, :key => @key}) { |img| img }
     end
     should "upload the file back to s3" do
       @manipulator.expects(:upload).with(@bucket, @key)
-      @manipulator.manipulate(@bucket, @key) { |img| img }
+      @manipulator.manipulate({:bucket => @bucket, :key => @key}) { |img| img }
+    end
+    should "not upload the file back to s3 when the keep_local option is passed" do
+      @manipulator.expects(:upload).never
+      @manipulator.manipulate({:bucket => @bucket, :key => @key, :keep_local => true}) { |img| img }
     end
     should "not run cleanup if download raises an error" do
       @manipulator.stubs(:download).raises('foo')
       @manipulator.expects(:cleanup).never
       begin
-        @manipulator.manipulate(@bucket, @key) { |img| img }
+        @manipulator.manipulate({:bucket => @bucket, :key => @key}) {|img| img }
       rescue
       end
     end
     should "ensure that it calls cleanup if download success" do
       @manipulator.expects(:cleanup)
       begin
-        @manipulator.manipulate(@bucket, @key) do |img|
+        @manipulator.manipulate({:bucket => @bucket, :key => @key}) do |img|
           raise "an error"
         end
       rescue
