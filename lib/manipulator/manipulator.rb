@@ -37,15 +37,23 @@ class Manipulator
   # For example, use
   #  m.manipulate('my-bucket', 'my-key') do |img|
   #    img.rotate(90)
-  #    img.sepia_tone
+  #    img.resize(100x100)
   #  end
   def manipulate(options, &block)
+    # TODO: make this configurable - use graphics magick
+    MiniMagick.processor = :gm
+
     download(options[:bucket], options[:key])
     begin
-      image = MiniMagick::Image.read(temp_file_path)
-      new_image = yield(image)
-      new_image.write(temp_file_path)
+      image = MiniMagick::Image.open(temp_file_path)
+      image.combine_options do |i|
+        yield(i)
+      end
+      image.write(temp_file_path)
       upload(options[:bucket], options[:key]) unless options[:keep_local]
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace
     ensure
       cleanup
     end
