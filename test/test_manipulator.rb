@@ -14,13 +14,29 @@ class TestManipulator < Test::Unit::TestCase
     File.stubs(:open).returns(@new_file)
   end
 
+  context "#connect_to_s3" do
+    setup do
+      @manipulator = Manipulator.new
+    end
+    should "use existing connection" do
+      AWS::S3::Base.stubs(:connected?).returns(true)
+      AWS::S3::Base.expects(:establish_connection!).never
+      @manipulator.connect_to_s3
+    end
+    should "establish a new connection if none exists" do
+      AWS::S3::Base.stubs(:connected?).returns(false)
+      AWS::S3::Base.expects(:establish_connection!).with(:access_key_id => @access_key, :secret_access_key => @secret_key)
+      @manipulator.connect_to_s3
+    end
+  end
   context "#download" do
     setup do
       @manipulator = Manipulator.new
+      @manipulator.stubs(:connect_to_s3)
       AWS::S3::S3Object.stubs(:value).returns('123')
     end
-    should "establish connection with credentials from aws_credentials" do
-      AWS::S3::Base.expects(:establish_connection!).with(:access_key_id => @access_key, :secret_access_key => @secret_key)
+    should "connect to s3" do
+      @manipulator.expects(:connect_to_s3)
       @manipulator.download(@bucket, @key)
     end
     should "set temp_file_path, replacing any /s with -s" do
@@ -38,13 +54,14 @@ class TestManipulator < Test::Unit::TestCase
   context "#manipulate" do
     setup do
       @manipulator = Manipulator.new
+      @manipulator.stubs(:connect_to_s3)
       @file = stub_everything('fake file')
       @manipulator.stubs(:download).returns(@key)
       @manipulator.stubs(:upload)
       @manipulator.stubs(:cleanup)
       @manipulator.stubs(:temp_file_path).returns(@temp_file_path)
-      @mocked = mock('fake rmagick instance')
-      Magick::Image.stubs(:read).returns([@mocked])
+      @mocked = mock('fake mini_magick instance')
+      MiniMagick::Image.stubs(:read).returns(@mocked)
       @mocked.stubs(:write)
     end
 
@@ -52,8 +69,8 @@ class TestManipulator < Test::Unit::TestCase
       @manipulator.expects(:download).with(@bucket, @key).returns(@key)
       @manipulator.manipulate({:bucket => @bucket, :key => @key}) { |img| img }
     end
-    should "create an RMagick Image instance and yield it to the block" do
-      Magick::Image.expects(:read).with(@temp_file_path).returns([@mocked])
+    should "create an MiniMagick Image instance and yield it to the block" do
+      MiniMagick::Image.expects(:read).with(@temp_file_path).returns(@mocked)
       @manipulator.manipulate({:bucket => @bucket, :key => @key}) do |img|
         assert_equal @mocked, img
         img
@@ -61,7 +78,7 @@ class TestManipulator < Test::Unit::TestCase
     end
     should "write the returned manipulated image to the temp file" do
       @mocked.expects(:write).with(@temp_file_path)
-      Magick::Image.stubs(:read).with(@temp_file_path).returns([@mocked])
+      MiniMagick::Image.stubs(:read).with(@temp_file_path).returns(@mocked)
       @manipulator.manipulate({:bucket => @bucket, :key => @key}) { |img| img }
     end
     should "upload the file back to s3" do
@@ -93,11 +110,13 @@ class TestManipulator < Test::Unit::TestCase
 
   context "#upload" do
     setup do
+      AWS::S3::S3Object.stubs(:url_for)
       @manipulator = Manipulator.new
       @manipulator.stubs(:temp_file_path).returns(@temp_file_path)
+      @manipulator.stubs(:connect_to_s3)
     end
     should "call S3Object.store with contents of tempfile" do
-      AWS::S3::S3Object.expects(:store).with(@key,@new_file,@bucket, :access => :public_read)
+      AWS::S3::S3Object.expects(:store).with(@key, @new_file, @bucket, :access => :public_read)
       @manipulator.upload(@bucket, @key)
     end
   end
