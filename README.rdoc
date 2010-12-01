@@ -1,9 +1,9 @@
-= manipulator
+= Manipulator
 
 S3 is great for storing image files, but manipulating images after they've been saved to S3 (rotating, resizing, cropping, etc.) is a bit of a chore.  Usually it goes something like this:
 
 * download file from S3, save to local tmp file
-* run imagemagick over local tmp file
+* run graphics or image magick over local tmp file
 * push modified image back to S3
 * remember to clean up tmp file
 
@@ -12,30 +12,24 @@ After re-implementing this pattern a few times over (and filling up /tmp by forg
  m = Manipulator.new
 
  m.manipulate('my-bucket','some/file.jpg') do |img|
-   img.rotate(90).resize_to_fit(75,75)
+   img.rotate(90)
+   img.resize_to_fit(75,75)
  end
 
-The idea is to instantiate a Manipulator and then pass it a bucket name and key to manipulate.  Manipulator will download your image to a local tmp file, then yield an RMagick Image wrapping that file.  Call methods on the yielded image to make modifications; as soon as the block returns, the modified image is pushed back to S3 and the tmp file is removed.
+The idea is to instantiate a Manipulator and then pass it a bucket name and key to manipulate.  Manipulator will download your image to a local tmp file, then yield a MiniMagick::Image wrapping that file.  Call methods on the yielded image to make modifications; as soon as the block returns, the modified image is pushed back to S3 and the tmp file is removed.
+
+We're using MiniMagick now instead of RMagick to save memory - we found that RMagick was a hog. MiniMagick is a lot more straightforward and has a nice interface for both GraphicsMagick (recommended) and ImageMagick.
 
 == Install
 
-Manipulator is released on gemcutter. If you haven't already set yourself up with that, here's how:
-
- $ gem install gemcutter
- $ gem tumble
-
-Then, to install Manipulator:
-
  $ gem install manipulator
 
-You can also just declare the source:
-
- $ gem install manipulator -s http://gemcutter.org
 
 == Dependencies
 
-* AWSCredentials (http://github.com/bkoski/aws_credentials)
-* AWS/S3 (http://gemcutter.org/gems/aws-s3)
+* AWS/S3 (http://rubygems.org/gems/aws-s3)
+* AWSCredentials (http://rubygems.org/gems/aws_credentials)
+* MiniMagick (http://rubygems.org/gems/mini_magick)
 
 == Future
 
@@ -43,4 +37,4 @@ You can also just declare the source:
 
 == Copyright
 
-Copyright (c) 2009 The New York Times Company. See LICENSE for details.
+Copyright (c) 2010 The New York Times Company. See LICENSE for details.
