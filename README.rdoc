@@ -10,8 +10,7 @@ S3 is great for storing image files, but manipulating images after they've been 
 After re-implementing this pattern a few times over (and filling up /tmp by forgetting the last step), we decided to roll this into a gem that makes S3 image manipulation as easy as:
 
  m = Manipulator.new
-
- m.manipulate('my-bucket','some/file.jpg') do |img|
+ m.manipulate({:bucket => 'my-bucket', :key => 'some/file.jpg'}) do |img|
    img.rotate(90)
    img.resize_to_fit(75,75)
  end
