@@ -5,6 +5,9 @@ require 'mini_magick'
 # The connection to S3 is opened using credentials read from AWSCredentials.
 class Manipulator
   attr_accessor :temp_file_path
+  def initialize(options = {})
+    MiniMagick.processor = options[:processor]
+  end
 
   # Establishes a connection to S3 if not already connected
   def connect_to_s3
@@ -40,8 +43,6 @@ class Manipulator
   #    img.resize(100x100)
   #  end
   def manipulate(options, &block)
-    # TODO: make this configurable - use graphics magick
-    MiniMagick.processor = :gm
 
     download(options[:bucket], options[:key])
     begin
