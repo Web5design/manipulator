@@ -9,7 +9,7 @@ S3 is great for storing image files, but manipulating images after they've been 
 
 After re-implementing this pattern a few times over (and filling up /tmp by forgetting the last step), we decided to roll this into a gem that makes S3 image manipulation as easy as:
 
- m = Manipulator.new
+ m = Manipulator.new(:processor => :gm) # use GraphicsMagick; defaults to ImageMagick
  m.manipulate({:bucket => 'my-bucket', :key => 'some/file.jpg'}) do |img|
    img.rotate(90)
    img.resize_to_fit(75,75)
@@ -18,6 +18,11 @@ After re-implementing this pattern a few times over (and filling up /tmp by forg
 The idea is to instantiate a Manipulator and then pass it a bucket name and key to manipulate.  Manipulator will download your image to a local tmp file, then yield a MiniMagick::Image wrapping that file.  Call methods on the yielded image to make modifications; as soon as the block returns, the modified image is pushed back to S3 and the tmp file is removed.
 
 We're using MiniMagick now instead of RMagick to save memory - we found that RMagick was a hog. MiniMagick is a lot more straightforward and has a nice interface for both GraphicsMagick (recommended) and ImageMagick.
+
+Want to do something that MiniMagick doesn't directly support, like removing all profiles from an image with GraphicsMagick (aka ImageMagick's strip method)?
+ m.manipulate('my-bucket', 'my-key' do |img|
+   `gm mogrify +profile '*' #{manipulator.temp_file_path}`
+ end
 
 == Install
 

@@ -42,6 +42,11 @@ class Manipulator
   #    img.rotate(90)
   #    img.resize(100x100)
   #  end
+  # Want to do something that MiniMagick doesn't directly support, like
+  # removing all profiles from an image with GraphicsMagick (aka ImageMagick's strip method)
+  # m.manipulate('my-bucket', 'my-key' do |img|
+  #   `gm mogrify +profile '*' #{manipulator.temp_file_path}`
+  # end
   def manipulate(options, &block)
 
     download(options[:bucket], options[:key])
@@ -51,7 +56,11 @@ class Manipulator
         yield(i)
       end
       image.write(temp_file_path)
-      upload(options[:bucket], options[:key]) unless options[:keep_local]
+
+      unless options[:keep_local]
+        target_key = options[:target_key] || options[:key]
+        upload(options[:bucket], target_key)
+      end
     rescue Exception => e
       puts e.message
       puts e.backtrace
