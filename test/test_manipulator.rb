@@ -23,10 +23,15 @@ class TestManipulator < Test::Unit::TestCase
       AWS::S3::Base.expects(:establish_connection!).never
       @manipulator.connect_to_s3
     end
-    should "establish a new connection if none exists" do
+    should "establish a new connection without a server name" do
       AWS::S3::Base.stubs(:connected?).returns(false)
-      AWS::S3::Base.expects(:establish_connection!).with(:access_key_id => @access_key, :secret_access_key => @secret_key)
-      @manipulator.connect_to_s3
+      AWS::S3::Base.expects(:establish_connection!).with(:access_key_id => @access_key, :secret_access_key => @secret_key, :server => "bucket.s3.amazonaws.com")
+      @manipulator.connect_to_s3('bucket')
+    end
+    should "establish a new connection with a server name" do
+      AWS::S3::Base.stubs(:connected?).returns(false)
+      AWS::S3::Base.expects(:establish_connection!).with(:access_key_id => @access_key, :secret_access_key => @secret_key, :server => "bucket.s3.amazonaws.com")
+      @manipulator.connect_to_s3('bucket')
     end
   end
   context "#download" do

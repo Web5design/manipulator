@@ -10,15 +10,23 @@ class Manipulator
   end
 
   # Establishes a connection to S3 if not already connected
-  def connect_to_s3
+  # Pass the bucket for virtual-hosted-style urls back from amazon
+  # e.g. mybucket.s3.amazonaws.com vs s3.amazonaws.com/mybucket
+  # NOTE: this requires jacqui's fork of the aws-s3 gem due to a bug:
+  # http://github.com/jacqui/aws-s3
+  def connect_to_s3(bucket = nil)
     unless AWS::S3::Base.connected?
-      AWS::S3::Base.establish_connection!(:access_key_id => AWSCredentials.access_key, :secret_access_key => AWSCredentials.secret_access_key)
+      if bucket
+        AWS::S3::Base.establish_connection!(:access_key_id => AWSCredentials.access_key, :secret_access_key => AWSCredentials.secret_access_key, :server => "#{bucket}.s3.amazonaws.com")
+      else
+        AWS::S3::Base.establish_connection!(:access_key_id => AWSCredentials.access_key, :secret_access_key => AWSCredentials.secret_access_key)
+      end
     end
   end
 
   # Downloads the specified key from the S3 bucket to a local temp file
   def download(bucket, key)
-    connect_to_s3
+    connect_to_s3(bucket)
     @temp_file_path = File.join(Dir.tmpdir, key.gsub('/', '-'))
     File.open(temp_file_path, 'w+') do |f|
       f.puts AWS::S3::S3Object.value(key,bucket)
@@ -28,7 +36,7 @@ class Manipulator
   # Pushes contents of temp file back to specified bucket, key on S3
   # Returns the url for the file
   def upload(bucket, key)
-    connect_to_s3
+    connect_to_s3(bucket)
     AWS::S3::S3Object.store(key, File.open(temp_file_path, 'r'), bucket, :access => :public_read)
     AWS::S3::S3Object.url_for(key, bucket, :authenticated => false)
   end
@@ -55,10 +63,12 @@ class Manipulator
       image.combine_options do |i|
         yield(i)
       end
+      target_key = options[:target_key] || options[:key]
+      # todo: save this file to a new name instead of overwriting it.
+      target_local_path = options[:target_key] || options[:key]
       image.write(temp_file_path)
 
       unless options[:keep_local]
-        target_key = options[:target_key] || options[:key]
         upload(options[:bucket], target_key)
       end
     rescue Exception => e
