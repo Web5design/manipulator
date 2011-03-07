@@ -25,8 +25,8 @@ class TestManipulator < Test::Unit::TestCase
     end
     should "establish a new connection without a server name" do
       AWS::S3::Base.stubs(:connected?).returns(false)
-      AWS::S3::Base.expects(:establish_connection!).with(:access_key_id => @access_key, :secret_access_key => @secret_key, :server => "bucket.s3.amazonaws.com")
-      @manipulator.connect_to_s3('bucket')
+      AWS::S3::Base.expects(:establish_connection!).with(:access_key_id => @access_key, :secret_access_key => @secret_key)
+      @manipulator.connect_to_s3
     end
     should "establish a new connection with a server name" do
       AWS::S3::Base.stubs(:connected?).returns(false)

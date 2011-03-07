@@ -9,24 +9,22 @@ class Manipulator
     MiniMagick.processor = options[:processor]
   end
 
-  # Establishes a connection to S3 if not already connected
+  # Establishes a connection to S3
   # Pass the bucket for virtual-hosted-style urls back from amazon
   # e.g. mybucket.s3.amazonaws.com vs s3.amazonaws.com/mybucket
   # NOTE: this requires jacqui's fork of the aws-s3 gem due to a bug:
   # http://github.com/jacqui/aws-s3
   def connect_to_s3(bucket = nil)
-    unless AWS::S3::Base.connected?
-      if bucket
-        AWS::S3::Base.establish_connection!(:access_key_id => AWSCredentials.access_key, :secret_access_key => AWSCredentials.secret_access_key, :server => "#{bucket}.s3.amazonaws.com")
-      else
-        AWS::S3::Base.establish_connection!(:access_key_id => AWSCredentials.access_key, :secret_access_key => AWSCredentials.secret_access_key)
-      end
+    if bucket
+      AWS::S3::Base.establish_connection!(:access_key_id => AWSCredentials.access_key, :secret_access_key => AWSCredentials.secret_access_key, :server => "#{bucket}.s3.amazonaws.com")
+    else
+      AWS::S3::Base.establish_connection!(:access_key_id => AWSCredentials.access_key, :secret_access_key => AWSCredentials.secret_access_key, :server => "s3.amazonaws.com")
     end
   end
 
   # Downloads the specified key from the S3 bucket to a local temp file
   def download(bucket, key)
-    connect_to_s3(bucket)
+    connect_to_s3
     @temp_file_path = File.join(Dir.tmpdir, key.gsub('/', '-'))
     File.open(temp_file_path, 'w+') do |f|
       f.puts AWS::S3::S3Object.value(key,bucket)
